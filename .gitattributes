@@ -1,0 +1,5 @@
+# Keep LF endings for files that run inside Linux containers or CI.
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.sql text eol=lf
+*.yml text eol=lf

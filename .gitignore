@@ -8,3 +8,12 @@ docs/
 
 # Local ticket tracker (to-spec / to-tickets)
 .scratch/
+
+# Python
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+
+# Local secrets
+.env

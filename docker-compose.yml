@@ -1,0 +1,54 @@
+# Local stack: `docker compose up` then open http://localhost:5173
+services:
+  db:
+    image: postgis/postgis:17-3.5
+    environment:
+      POSTGRES_USER: flashpoint
+      POSTGRES_PASSWORD: flashpoint
+      POSTGRES_DB: flashpoint
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init-test-database.sql:/docker-entrypoint-initdb.d/20-init-test-database.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flashpoint -d flashpoint"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  api:
+    build: ./backend
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn flashpoint.api.main:app --host 0.0.0.0 --port 8000 --reload --app-dir src"
+    environment:
+      DATABASE_URL: postgresql+psycopg://flashpoint:flashpoint@db:5432/flashpoint
+      CORS_ORIGINS: http://localhost:5173
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/migrations:/app/migrations
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    image: node:24-slim
+    working_dir: /app
+    command: sh -c "npm ci && npm run dev -- --host 0.0.0.0"
+    environment:
+      VITE_API_URL: http://localhost:8000
+      CHOKIDAR_USEPOLLING: "true"
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  frontend_node_modules:
