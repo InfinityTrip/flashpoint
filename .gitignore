@@ -1,0 +1,7 @@
+# Locally installed agent skills (absolute symlinks; not part of the project)
+.agents/
+.claude/skills/
+skills-lock.json
+
+# Private planning notes: decision log, ADRs, research (kept local only)
+docs/
