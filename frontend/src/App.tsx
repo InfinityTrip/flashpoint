@@ -8,8 +8,11 @@ function ApiStatus() {
   const health = useQuery({ queryKey: ['health'], queryFn: fetchHealth, refetchInterval: 60_000 })
 
   if (health.isPending) return <span className="text-gray-400">Connecting to API…</span>
-  if (health.isError || health.data.status !== 'ok') {
+  if (health.isError || health.data.status === 'down') {
     return <span className="text-red-400">API unavailable</span>
+  }
+  if (health.data.status === 'degraded') {
+    return <span className="text-amber-400">Data delayed</span>
   }
   return <span className="text-emerald-400">API connected</span>
 }

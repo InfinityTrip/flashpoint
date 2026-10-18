@@ -3,8 +3,11 @@ import type { Feature, FeatureCollection, Point } from 'geojson'
 import { API_URL } from './config'
 
 export type Health = {
-  status: 'ok' | 'down'
+  /** degraded: the API works but the newest data is over an hour old. */
+  status: 'ok' | 'degraded' | 'down'
   database: 'ok' | 'unreachable'
+  latest_data_at: string | null
+  minutes_since_update: number | null
 }
 
 async function getJson<T>(path: string): Promise<T> {

@@ -35,6 +35,18 @@ function viewOf(map: maplibregl.Map): MapView {
   return { zoom, bbox: parts.map((n) => n.toFixed(1)).join(',') }
 }
 
+/** Adds `size`: the cell's count relative to the busiest cell, as an area (hence the sqrt). */
+function withRelativeSize(grid: GridResponse): FeatureCollection {
+  const max = Math.max(1, ...grid.features.map((f) => f.properties.count))
+  return {
+    type: 'FeatureCollection',
+    features: grid.features.map((f) => ({
+      ...f,
+      properties: { ...f.properties, size: Math.sqrt(f.properties.count / max) },
+    })),
+  }
+}
+
 type Props = {
   grid: GridResponse | undefined
   onViewChange: (view: MapView) => void
@@ -75,13 +87,14 @@ export function Globe({ grid, onViewChange }: Props) {
         type: 'circle',
         source: 'grid',
         paint: {
-          // Area, not radius, grows with the count, so big cells don't look exaggerated.
-          'circle-radius': ['interpolate', ['linear'], ['sqrt', ['get', 'count']], 1, 3, 10, 11, 40, 28],
+          // `size` is 0-1 relative to the busiest cell in view (see below), so the map stays
+          // readable whether it shows one day or a month.
+          'circle-radius': ['interpolate', ['linear'], ['get', 'size'], 0, 2, 1, 26],
           'circle-color': colourByType('top_type'),
-          'circle-opacity': 0.55,
+          'circle-opacity': 0.5,
           'circle-stroke-color': '#ffffff',
           'circle-stroke-opacity': 0.35,
-          'circle-stroke-width': 0.75,
+          'circle-stroke-width': 0.5,
         },
       })
       onViewChangeRef.current(viewOf(map))
@@ -112,7 +125,7 @@ export function Globe({ grid, onViewChange }: Props) {
 
   useEffect(() => {
     const source = mapRef.current?.getSource<maplibregl.GeoJSONSource>('grid')
-    source?.setData(grid ?? EMPTY)
+    source?.setData(grid ? withRelativeSize(grid) : EMPTY)
   }, [grid])
 
   return <div ref={container} className="h-full w-full" data-testid="globe" />

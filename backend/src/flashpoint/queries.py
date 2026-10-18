@@ -5,8 +5,26 @@ from dataclasses import dataclass
 from sqlalchemy import Connection, text
 
 
-def database_is_reachable(conn: Connection) -> bool:
-    return conn.execute(text("SELECT 1")).scalar_one() == 1
+def data_freshness(conn: Connection) -> dict:
+    """The newest GDELT file stored successfully, and how many minutes ago it was published."""
+    row = (
+        conn.execute(
+            text("""
+            SELECT
+                max(file_timestamp) AS latest_data_at,
+                extract(epoch FROM now() - max(file_timestamp)) / 60 AS minutes_since_update
+            FROM ingest_runs
+            WHERE status = 'succeeded'
+        """)
+        )
+        .mappings()
+        .one()
+    )
+    minutes = row["minutes_since_update"]
+    return {
+        "latest_data_at": row["latest_data_at"],
+        "minutes_since_update": None if minutes is None else float(minutes),
+    }
 
 
 @dataclass(frozen=True)
