@@ -1,0 +1,84 @@
+event_code,root_code,description
+140,14,Engage in political dissent
+141,14,Demonstrate or rally
+1411,14,Demonstrate for leadership change
+1412,14,Demonstrate for policy change
+1413,14,Demonstrate for rights
+1414,14,"Demonstrate for change in institutions, regime"
+142,14,Conduct hunger strike
+1421,14,Conduct hunger strike for leadership change
+1422,14,Conduct hunger strike for policy change
+1423,14,Conduct hunger strike for rights
+1424,14,"Conduct hunger strike for change in institutions, regime"
+143,14,Conduct strike or boycott
+1431,14,Conduct strike or boycott for leadership change
+1432,14,Conduct strike or boycott for policy change
+1433,14,Conduct strike or boycott for rights
+1434,14,"Conduct strike or boycott for change in institutions, regime"
+144,14,"Obstruct passage, block"
+1441,14,Obstruct passage to demand leadership change
+1442,14,Obstruct passage to demand policy change
+1443,14,Obstruct passage to demand rights
+1444,14,"Obstruct passage to demand change in institutions, regime"
+145,14,"Protest violently, riot"
+1451,14,Engage in violent protest for leadership change
+1452,14,Engage in violent protest for policy change
+1453,14,Engage in violent protest for rights
+1454,14,"Engage in violent protest for change in institutions, regime"
+150,15,Demonstrate military or police power
+151,15,Increase police alert status
+152,15,Increase military alert status
+153,15,Mobilize or increase police power
+154,15,Mobilize or increase armed forces
+160,16,Reduce relations
+161,16,Reduce or break diplomatic relations
+162,16,Reduce or stop aid
+1621,16,Reduce or stop economic assistance
+1622,16,Reduce or stop military assistance
+1623,16,Reduce or stop humanitarian assistance
+163,16,"Impose embargo, boycott, or sanctions"
+164,16,Halt negotiations
+165,16,Halt mediation
+166,16,Expel or withdraw
+1661,16,Expel or withdraw peacekeepers
+1662,16,"Expel or withdraw inspectors, observers"
+1663,16,Expel or withdraw aid agencies
+170,17,Coerce
+171,17,Seize or damage property
+1711,17,Confiscate property
+1712,17,Destroy property
+172,17,Impose administrative sanctions
+1721,17,Impose restrictions on political freedoms
+1722,17,Ban political parties or politicians
+1723,17,Impose curfew
+1724,17,Impose state of emergency or martial law
+173,17,"Arrest, detain, or charge with legal action"
+174,17,Expel or deport individuals
+175,17,Use tactics of violent repression
+180,18,Use unconventional violence
+181,18,"Abduct, hijack, or take hostage"
+182,18,Physically assault
+1821,18,Sexually assault
+1822,18,Torture
+1823,18,Kill by physical assault
+183,18,"Conduct suicide, car, or other non-military bombing"
+1831,18,Carry out suicide bombing
+1832,18,Carry out car bombing
+1833,18,Carry out roadside bombing
+184,18,Use as human shield
+185,18,Attempt to assassinate
+186,18,Assassinate
+190,19,Use conventional military force
+191,19,"Impose blockade, restrict movement"
+192,19,Occupy territory
+193,19,Fight with small arms and light weapons
+194,19,Fight with artillery and tanks
+195,19,Employ aerial weapons
+196,19,Violate ceasefire
+200,20,Use unconventional mass violence
+201,20,Engage in mass expulsion
+202,20,Engage in mass killings
+203,20,Engage in ethnic cleansing
+204,20,Use weapons of mass destruction
+2041,20,"Use chemical, biological, or radiological weapons"
+2042,20,Detonate nuclear weapons

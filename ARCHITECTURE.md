@@ -73,6 +73,10 @@ regions (7 World Bank regions)
 countries (FIPS code PK, ISO code, name, region)
    ▲
 events ──▶ event_types (CAMEO root 14–20, name, colour)
+   ┊
+   ┊ (looked up by full code, no foreign key)
+   ▼
+cameo_actions (full CAMEO code, plain-words description)
 
 ingest_runs (one row per 15-minute file)
 ```
@@ -85,6 +89,7 @@ ingest_runs (one row per 15-minute file)
   - the two actors and their countries
   - location precision, place name, country, and a PostGIS point (SRID 4326)
   - source URL
+- **`cameo_actions`** holds GDELT's description of each full CAMEO code under roots 14–20 (for example 193, "Fight with small arms and light weapons"). It has no foreign key from `events`, so an unknown code is still stored.
 - **`countries`** maps GDELT's FIPS 10-4 codes to ISO codes, names and regions. Events whose code isn't in the table are stored with a null country.
 - **Indexes:**
   - a GiST index on the point (map area queries)
@@ -110,8 +115,8 @@ Relative windows count back from the newest stored data, so a stalled ingest nev
 | Endpoint | Returns |
 |---|---|
 | `GET /v1/events/grid?zoom&bbox` | Counts per grid cell (`ST_SnapToGrid`), with the cell size set by zoom |
-| `GET /v1/events?bbox&limit` | Individual events as GeoJSON, newest first, with a `truncated` flag |
-| `GET /v1/events/{id}` | Every stored field for one event |
+| `GET /v1/events?bbox&limit` | Individual city- and province-precision events as GeoJSON, newest first, with a `truncated` flag |
+| `GET /v1/events/{id}` | Every stored field for one event, with type, action, place and actor countries resolved |
 | `GET /v1/surges?region&type` | Countries surging now, ranked by σ |
 | `GET /v1/replay` | One coarse grid per day across the retention window |
 | `GET /v1/filters` | Regions, countries, conflict types, available date range |

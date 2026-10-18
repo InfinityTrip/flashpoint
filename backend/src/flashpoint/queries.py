@@ -150,3 +150,87 @@ def grid_counts(
     """
     params = {"cell_size": cell_size, **(bbox.__dict__ if bbox else {}), **filter_params}
     return [dict(row) for row in conn.execute(text(sql), params).mappings()]
+
+
+# GDELT location types precise enough to draw as a point: 2 US state, 3 US city, 4 world city,
+# 5 world province. Type 1 is a whole country, placed at its centre, which would make every
+# country's centre look like a hotspot.
+POINT_GEO_TYPES = (2, 3, 4, 5)
+
+
+def event_points(
+    conn: Connection, bbox: BBox | None, filters: EventFilters, limit: int
+) -> tuple[list[dict], bool]:
+    """The newest city- and province-precision events, and whether more matched than `limit`."""
+    where, filter_params = _filter_condition(filters)
+    # Asking for one row more than the limit tells us whether anything was cut off,
+    # without a separate count(*) over every matching event.
+    sql = f"""
+        SELECT
+            global_event_id AS id,
+            ST_X(location) AS lon,
+            ST_Y(location) AS lat,
+            root_code,
+            date_added
+        FROM events
+        WHERE geo_type IN {POINT_GEO_TYPES} AND {_bbox_condition(bbox)} AND {where}
+        ORDER BY date_added DESC, global_event_id DESC
+        LIMIT :limit_plus_one
+    """
+    params = {"limit_plus_one": limit + 1, **(bbox.__dict__ if bbox else {}), **filter_params}
+    rows = [dict(row) for row in conn.execute(text(sql), params).mappings()]
+    return rows[:limit], len(rows) > limit
+
+
+def event_detail(conn: Connection, event_id: int) -> dict | None:
+    """One event with its conflict type, CAMEO action, place and actor countries resolved."""
+    row = (
+        conn.execute(
+            text("""
+            SELECT
+                e.global_event_id AS id,
+                e.date_added,
+                e.event_date,
+                e.root_code,
+                t.name AS type_name,
+                t.colour AS type_colour,
+                e.event_code,
+                a.description AS action,
+                e.actor1_name,
+                e.actor1_country,
+                e.actor2_name,
+                e.actor2_country,
+                -- Actors use CAMEO country codes, which are ISO 3166 alpha-3. A code shared by
+                -- several FIPS entries (PSE: Gaza Strip and West Bank) is ambiguous, so it
+                -- gets no name rather than the wrong one.
+                (SELECT min(name) FROM countries WHERE iso3 = e.actor1_country
+                 HAVING count(*) = 1) AS actor1_country_name,
+                (SELECT min(name) FROM countries WHERE iso3 = e.actor2_country
+                 HAVING count(*) = 1) AS actor2_country_name,
+                e.place_name,
+                e.geo_type,
+                e.country_code,
+                c.name AS country_name,
+                r.id AS region_id,
+                r.name AS region_name,
+                ST_X(e.location) AS lon,
+                ST_Y(e.location) AS lat,
+                e.num_mentions,
+                e.num_sources,
+                e.num_articles,
+                e.goldstein,
+                e.avg_tone,
+                e.source_url
+            FROM events e
+            JOIN event_types t ON t.root_code = e.root_code
+            LEFT JOIN cameo_actions a ON a.event_code = e.event_code
+            LEFT JOIN countries c ON c.fips_code = e.country_code
+            LEFT JOIN regions r ON r.id = c.region_id
+            WHERE e.global_event_id = :event_id
+        """),
+            {"event_id": event_id},
+        )
+        .mappings()
+        .one_or_none()
+    )
+    return None if row is None else dict(row)

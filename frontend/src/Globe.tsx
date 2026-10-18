@@ -6,7 +6,7 @@ import { useEffect, useRef } from 'react'
 
 import type { FeatureCollection } from 'geojson'
 
-import type { GridResponse, MapView } from './api'
+import type { GridResponse, MapView, PointsResponse } from './api'
 import { BASEMAP_STYLE_URL } from './config'
 import { colourByType } from './conflictTypes'
 import type { Camera } from './viewState'
@@ -45,26 +45,82 @@ function withRelativeSize(grid: GridResponse): FeatureCollection {
     type: 'FeatureCollection',
     features: grid.features.map((f) => ({
       ...f,
-      properties: { ...f.properties, size: Math.sqrt(f.properties.count / max) },
+      properties: {
+        ...f.properties,
+        size: Math.sqrt(f.properties.count / max),
+      },
     })),
   }
+}
+
+/** Adds `stack`: how many events share the point's exact spot (GDELT reuses city centres). */
+function withStackSize(points: PointsResponse): FeatureCollection {
+  const key = (f: PointsResponse['features'][number]) => f.geometry.coordinates.join(',')
+  const counts = new Map<string, number>()
+  for (const f of points.features) counts.set(key(f), (counts.get(key(f)) ?? 0) + 1)
+  return {
+    type: 'FeatureCollection',
+    features: points.features.map((f) => ({
+      ...f,
+      properties: { ...f.properties, stack: counts.get(key(f)) },
+    })),
+  }
+}
+
+// 1 for a lone event, growing to 3 for a spot with 50 or more.
+const STACK_SCALE: maplibregl.ExpressionSpecification = [
+  'interpolate',
+  ['linear'],
+  ['sqrt', ['get', 'stack']],
+  1,
+  1,
+  7,
+  3,
+]
+
+/** Point radius in pixels plus `extra`: larger when zoomed in and for stacked spots. */
+function pointRadius(extra: number): maplibregl.ExpressionSpecification {
+  // MapLibre only allows ['zoom'] in a top-level interpolate, so the stack scale goes inside it.
+  return [
+    'interpolate',
+    ['linear'],
+    ['zoom'],
+    5,
+    ['+', extra, ['*', 3.5, STACK_SCALE]],
+    10,
+    ['+', extra, ['*', 6, STACK_SCALE]],
+  ]
 }
 
 type Props = {
   /** Where the globe starts; later camera moves are reported through onViewChange. */
   initialCamera: Camera
   grid: GridResponse | undefined
+  points: PointsResponse | undefined
+  /** The event whose detail card is open, outlined on the map. */
+  selectedId: number | null
   onViewChange: (view: MapView) => void
+  /** Called with the events under a clicked point (newest first), or [] for a click elsewhere. */
+  onSelectEvents: (ids: number[]) => void
 }
 
-export function Globe({ initialCamera, grid, onViewChange }: Props) {
+export function Globe({
+  initialCamera,
+  grid,
+  points,
+  selectedId,
+  onViewChange,
+  onSelectEvents,
+}: Props) {
   const container = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const initialCameraRef = useRef(initialCamera)
   const onViewChangeRef = useRef(onViewChange)
+  const onSelectEventsRef = useRef(onSelectEvents)
   useEffect(() => {
     onViewChangeRef.current = onViewChange
-  }, [onViewChange])
+    onSelectEventsRef.current = onSelectEvents
+  }, [onViewChange, onSelectEvents])
 
   useEffect(() => {
     if (!container.current) return
@@ -103,6 +159,32 @@ export function Globe({ initialCamera, grid, onViewChange }: Props) {
           'circle-stroke-width': 0.5,
         },
       })
+
+      map.addSource('points', { type: 'geojson', data: EMPTY })
+      map.addLayer({
+        id: 'event-points',
+        type: 'circle',
+        source: 'points',
+        paint: {
+          'circle-radius': pointRadius(0),
+          'circle-color': colourByType('root_code'),
+          'circle-opacity': 0.85,
+          'circle-stroke-color': '#0b0d12',
+          'circle-stroke-width': 1,
+        },
+      })
+      map.addLayer({
+        id: 'selected-point',
+        type: 'circle',
+        source: 'points',
+        filter: ['==', ['get', 'id'], -1],
+        paint: {
+          'circle-radius': pointRadius(4),
+          'circle-color': 'rgba(0, 0, 0, 0)',
+          'circle-stroke-color': '#ffffff',
+          'circle-stroke-width': 2,
+        },
+      })
       onViewChangeRef.current(viewOf(map))
     })
 
@@ -119,8 +201,21 @@ export function Globe({ initialCamera, grid, onViewChange }: Props) {
       const [lng, lat] = cell.geometry.coordinates
       map.flyTo({ center: [lng, lat], zoom: Math.min(map.getZoom() + 2, 8) })
     })
-    map.on('mouseenter', 'grid-cells', () => (map.getCanvas().style.cursor = 'pointer'))
-    map.on('mouseleave', 'grid-cells', () => (map.getCanvas().style.cursor = ''))
+    // GDELT places many events at the same city centre, so one click can hit a stack of them.
+    map.on('click', (event) => {
+      const hits = map.getLayer('event-points')
+        ? map.queryRenderedFeatures(event.point, { layers: ['event-points'] })
+        : []
+      const byId = new Map(
+        hits.map((f) => [f.properties.id as number, f.properties.date_added as string]),
+      )
+      const ids = [...byId].sort((a, b) => b[1].localeCompare(a[1])).map(([id]) => id)
+      onSelectEventsRef.current(ids)
+    })
+    for (const layer of ['grid-cells', 'event-points']) {
+      map.on('mouseenter', layer, () => (map.getCanvas().style.cursor = 'pointer'))
+      map.on('mouseleave', layer, () => (map.getCanvas().style.cursor = ''))
+    }
 
     return () => {
       window.clearTimeout(timer)
@@ -133,6 +228,19 @@ export function Globe({ initialCamera, grid, onViewChange }: Props) {
     const source = mapRef.current?.getSource<maplibregl.GeoJSONSource>('grid')
     source?.setData(grid ? withRelativeSize(grid) : EMPTY)
   }, [grid])
+
+  useEffect(() => {
+    mapRef.current
+      ?.getSource<maplibregl.GeoJSONSource>('points')
+      ?.setData(points ? withStackSize(points) : EMPTY)
+  }, [points])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (map?.getLayer('selected-point')) {
+      map.setFilter('selected-point', ['==', ['get', 'id'], selectedId ?? -1])
+    }
+  }, [selectedId])
 
   return <div ref={container} className="h-full w-full" data-testid="globe" />
 }

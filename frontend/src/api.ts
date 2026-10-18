@@ -49,6 +49,9 @@ export type MapView = {
   camera: Camera
 }
 
+/** From this zoom the globe draws individual events instead of grid cells. */
+export const POINTS_FROM_ZOOM = 5
+
 /** The grid request for a map view and the view's filters, as a path (also the cache key). */
 export function gridPath(map: MapView, view: ViewState): string {
   const params = filterParams(view)
@@ -58,3 +61,56 @@ export function gridPath(map: MapView, view: ViewState): string {
 }
 
 export const fetchGrid = (path: string) => getJson<GridResponse>(path)
+
+export type EventPoint = Feature<Point, { id: number; root_code: number; date_added: string }>
+
+export type PointsResponse = FeatureCollection<Point, EventPoint['properties']> & {
+  /** More events matched than were returned; only the newest are included. */
+  truncated: boolean
+}
+
+/** The individual-events request for a map view, as a path (also the cache key). */
+export function pointsPath(map: MapView, view: ViewState): string {
+  const params = filterParams(view)
+  if (map.bbox) params.set('bbox', map.bbox)
+  return `/events?${params}`
+}
+
+export const fetchPoints = (path: string) => getJson<PointsResponse>(path)
+
+export type Actor = {
+  name: string | null
+  country_code: string | null
+  country_name: string | null
+}
+
+export type EventDetail = {
+  id: number
+  date_added: string
+  event_date: string
+  conflict_type: ConflictType
+  event_code: string
+  /** The CAMEO action in plain words; null when the code isn't in the lookup. */
+  action: string | null
+  actor1: Actor
+  actor2: Actor
+  place: {
+    name: string | null
+    geo_type: number
+    precision: 'country' | 'province' | 'city'
+    country_code: string | null
+    country_name: string | null
+    region_id: string | null
+    region_name: string | null
+    lon: number
+    lat: number
+  }
+  num_mentions: number | null
+  num_sources: number | null
+  num_articles: number | null
+  goldstein: number | null
+  avg_tone: number | null
+  source_url: string | null
+}
+
+export const fetchEvent = (id: number) => getJson<EventDetail>(`/events/${id}`)
