@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel
 
 from flashpoint import queries
+from flashpoint.api.filters import Filters
 
 router = APIRouter()
 
@@ -64,13 +65,14 @@ class GridResponse(BaseModel):
 def events_grid(
     request: Request,
     zoom: Annotated[float, Query(ge=0, le=24, description="Map zoom level; sets the cell size")],
+    filters: Filters,
     bbox: Annotated[
         str | None, Query(description="west,south,east,north in degrees; omit for the whole world")
     ] = None,
 ) -> GridResponse:
     cell_size = cell_size_for_zoom(zoom)
     with request.app.state.engine.connect() as conn:
-        cells = queries.grid_counts(conn, cell_size, parse_bbox(bbox))
+        cells = queries.grid_counts(conn, cell_size, parse_bbox(bbox), filters)
     return GridResponse(
         cell_size=cell_size,
         total=sum(cell["count"] for cell in cells),

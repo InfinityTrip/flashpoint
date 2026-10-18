@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from flashpoint.api import events, health
+from flashpoint.api import events, filters, health
 from flashpoint.db import make_engine
 from flashpoint.settings import Settings, get_settings
 
@@ -25,4 +25,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.include_router(health.router, prefix="/v1")
     app.include_router(events.router, prefix="/v1")
+    app.include_router(filters.router, prefix="/v1")
     return app

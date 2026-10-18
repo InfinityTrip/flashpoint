@@ -9,6 +9,7 @@ import type { FeatureCollection } from 'geojson'
 import type { GridResponse, MapView } from './api'
 import { BASEMAP_STYLE_URL } from './config'
 import { colourByType } from './conflictTypes'
+import type { Camera } from './viewState'
 
 // MapLibre v6 finds its web worker relative to its own file, which bundling breaks.
 // Importing the worker with ?url makes Vite ship it and hands MapLibre the real address.
@@ -21,10 +22,12 @@ const WHOLE_WORLD_BELOW_ZOOM = 3
 /** The visible area as the API's bbox parameter, rounded so nearby views share a cache entry. */
 function viewOf(map: maplibregl.Map): MapView {
   const zoom = map.getZoom()
-  if (zoom < WHOLE_WORLD_BELOW_ZOOM) return { zoom, bbox: null }
+  const { lng, lat } = map.getCenter()
+  const camera = { lng, lat, zoom }
+  if (zoom < WHOLE_WORLD_BELOW_ZOOM) return { zoom, bbox: null, camera }
   const bounds = map.getBounds()
   const span = bounds.getEast() - bounds.getWest()
-  if (span >= 360) return { zoom, bbox: null }
+  if (span >= 360) return { zoom, bbox: null, camera }
   const wrap = (lng: number) => ((((lng + 180) % 360) + 360) % 360) - 180
   const parts = [
     wrap(bounds.getWest()),
@@ -32,7 +35,7 @@ function viewOf(map: maplibregl.Map): MapView {
     wrap(bounds.getEast()),
     Math.min(bounds.getNorth(), 90),
   ]
-  return { zoom, bbox: parts.map((n) => n.toFixed(1)).join(',') }
+  return { zoom, bbox: parts.map((n) => n.toFixed(1)).join(','), camera }
 }
 
 /** Adds `size`: the cell's count relative to the busiest cell, as an area (hence the sqrt). */
@@ -48,13 +51,16 @@ function withRelativeSize(grid: GridResponse): FeatureCollection {
 }
 
 type Props = {
+  /** Where the globe starts; later camera moves are reported through onViewChange. */
+  initialCamera: Camera
   grid: GridResponse | undefined
   onViewChange: (view: MapView) => void
 }
 
-export function Globe({ grid, onViewChange }: Props) {
+export function Globe({ initialCamera, grid, onViewChange }: Props) {
   const container = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
+  const initialCameraRef = useRef(initialCamera)
   const onViewChangeRef = useRef(onViewChange)
   useEffect(() => {
     onViewChangeRef.current = onViewChange
@@ -65,8 +71,8 @@ export function Globe({ grid, onViewChange }: Props) {
     const map = new maplibregl.Map({
       container: container.current,
       style: BASEMAP_STYLE_URL,
-      center: [30, 20],
-      zoom: 1.6,
+      center: [initialCameraRef.current.lng, initialCameraRef.current.lat],
+      zoom: initialCameraRef.current.zoom,
       attributionControl: { compact: true },
     })
     mapRef.current = map

@@ -1,8 +1,10 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
-import { fetchGrid, fetchHealth, type MapView } from './api'
+import { fetchFilters, fetchGrid, fetchHealth, gridPath, type MapView } from './api'
+import { FilterBar } from './FilterBar'
 import { Globe } from './Globe'
+import { parseView, serializeView, type ViewState } from './viewState'
 
 function ApiStatus() {
   const health = useQuery({ queryKey: ['health'], queryFn: fetchHealth, refetchInterval: 60_000 })
@@ -18,11 +20,31 @@ function ApiStatus() {
 }
 
 export default function App() {
-  const [view, setView] = useState<MapView | null>(null)
+  // The URL is the source of truth on load; after that, every change is written back to it.
+  const [view, setView] = useState<ViewState>(() => parseView(window.location.search))
+  const [map, setMap] = useState<MapView | null>(null)
+
+  useEffect(() => {
+    // replaceState, not pushState: panning shouldn't fill the back button with history.
+    const url = `${window.location.pathname}${serializeView(view)}`
+    window.history.replaceState(null, '', url)
+  }, [view])
+
+  const updateView = useCallback((next: Partial<ViewState>) => {
+    setView((current) => ({ ...current, ...next }))
+  }, [])
+
+  const onMapChange = useCallback((next: MapView) => {
+    setMap(next)
+    setView((current) => ({ ...current, camera: next.camera }))
+  }, [])
+
+  const filters = useQuery({ queryKey: ['filters'], queryFn: fetchFilters, staleTime: 5 * 60_000 })
+  const path = map ? gridPath(map, view) : null
   const grid = useQuery({
-    queryKey: ['grid', view],
-    queryFn: () => fetchGrid(view!),
-    enabled: view !== null,
+    queryKey: ['grid', path],
+    queryFn: () => fetchGrid(path!),
+    enabled: path !== null,
     // Keep the old cells on screen while the next view loads, instead of flashing empty.
     placeholderData: keepPreviousData,
   })
@@ -37,8 +59,14 @@ export default function App() {
           News-reported conflict events worldwide, from GDELT 2.0
         </p>
       </header>
+      <FilterBar filters={filters.data} view={view} onChange={updateView} />
       <main className="relative min-h-0 flex-1">
-        <Globe grid={grid.data} onViewChange={setView} />
+        <Globe initialCamera={view.camera} grid={grid.data} onViewChange={onMapChange} />
+        {grid.isFetching && (
+          <div className="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-xs text-gray-300">
+            Loading…
+          </div>
+        )}
       </main>
       <footer className="flex gap-4 border-t border-white/10 px-4 py-1.5 text-xs">
         <ApiStatus />
