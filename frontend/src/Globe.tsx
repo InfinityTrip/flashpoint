@@ -8,7 +8,7 @@ import type { FeatureCollection } from 'geojson'
 
 import type { GridResponse, MapView, PointsResponse } from './api'
 import { BASEMAP_STYLE_URL } from './config'
-import { colourByType } from './conflictTypes'
+import { colourByMostCommonType, colourByType, typeCountProperties } from './conflictTypes'
 import type { Camera } from './viewState'
 
 // MapLibre v6 finds its web worker relative to its own file, which bundling breaks.
@@ -67,7 +67,19 @@ function withStackSize(points: PointsResponse): FeatureCollection {
   }
 }
 
-// 1 for a lone event, growing to 3 for a spot with 50 or more.
+// Nearby points merge into numbered clusters up to this zoom; beyond it every event is drawn.
+const CLUSTER_MAX_ZOOM = 14
+
+/** Event ids from point features, newest first. */
+function newestFirst(features: { properties: Record<string, unknown> | null }[]): number[] {
+  const byId = new Map(
+    features.map((f) => [f.properties?.id as number, f.properties?.date_added as string]),
+  )
+  return [...byId].sort((a, b) => b[1].localeCompare(a[1])).map(([id]) => id)
+}
+
+// Past CLUSTER_MAX_ZOOM, events at the very same spot still overlap: 1 for a lone event,
+// growing to 3 for a spot with 50 or more.
 const STACK_SCALE: maplibregl.ExpressionSpecification = [
   'interpolate',
   ['linear'],
@@ -160,11 +172,58 @@ export function Globe({
         },
       })
 
-      map.addSource('points', { type: 'geojson', data: EMPTY })
+      map.addSource('points', {
+        type: 'geojson',
+        data: EMPTY,
+        cluster: true,
+        clusterRadius: 36,
+        clusterMaxZoom: CLUSTER_MAX_ZOOM,
+        clusterProperties: typeCountProperties(),
+      })
+      map.addLayer({
+        id: 'event-clusters',
+        type: 'circle',
+        source: 'points',
+        filter: ['has', 'point_count'],
+        paint: {
+          'circle-radius': [
+            'interpolate',
+            ['linear'],
+            ['get', 'point_count'],
+            2,
+            10,
+            50,
+            15,
+            500,
+            22,
+            2000,
+            28,
+          ],
+          'circle-color': colourByMostCommonType(),
+          'circle-opacity': 0.75,
+          'circle-stroke-color': '#ffffff',
+          'circle-stroke-opacity': 0.4,
+          'circle-stroke-width': 1,
+        },
+      })
+      map.addLayer({
+        id: 'event-cluster-counts',
+        type: 'symbol',
+        source: 'points',
+        filter: ['has', 'point_count'],
+        layout: {
+          'text-field': ['get', 'point_count_abbreviated'],
+          'text-font': ['Open Sans Bold'],
+          'text-size': 11,
+          'text-allow-overlap': true,
+        },
+        paint: { 'text-color': '#ffffff' },
+      })
       map.addLayer({
         id: 'event-points',
         type: 'circle',
         source: 'points',
+        filter: ['!', ['has', 'point_count']],
         paint: {
           'circle-radius': pointRadius(0),
           'circle-color': colourByType('root_code'),
@@ -206,13 +265,22 @@ export function Globe({
       const hits = map.getLayer('event-points')
         ? map.queryRenderedFeatures(event.point, { layers: ['event-points'] })
         : []
-      const byId = new Map(
-        hits.map((f) => [f.properties.id as number, f.properties.date_added as string]),
-      )
-      const ids = [...byId].sort((a, b) => b[1].localeCompare(a[1])).map(([id]) => id)
-      onSelectEventsRef.current(ids)
+      onSelectEventsRef.current(newestFirst(hits))
     })
-    for (const layer of ['grid-cells', 'event-points']) {
+    map.on('click', 'event-clusters', async (event) => {
+      const cluster = event.features?.[0]
+      const source = map.getSource<maplibregl.GeoJSONSource>('points')
+      if (cluster?.geometry.type !== 'Point' || !source) return
+      const clusterId = cluster.properties.cluster_id as number
+      const zoom = await source.getClusterExpansionZoom(clusterId)
+      if (zoom <= CLUSTER_MAX_ZOOM) {
+        map.easeTo({ center: cluster.geometry.coordinates as [number, number], zoom })
+        return
+      }
+      // Events at one spot never separate by zooming, so open them all in the detail card.
+      onSelectEventsRef.current(newestFirst(await source.getClusterLeaves(clusterId, 1000, 0)))
+    })
+    for (const layer of ['grid-cells', 'event-clusters', 'event-points']) {
       map.on('mouseenter', layer, () => (map.getCanvas().style.cursor = 'pointer'))
       map.on('mouseleave', layer, () => (map.getCanvas().style.cursor = ''))
     }

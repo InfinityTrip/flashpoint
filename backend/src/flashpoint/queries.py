@@ -161,7 +161,11 @@ POINT_GEO_TYPES = (2, 3, 4, 5)
 def event_points(
     conn: Connection, bbox: BBox | None, filters: EventFilters, limit: int
 ) -> tuple[list[dict], bool]:
-    """The newest city- and province-precision events, and whether more matched than `limit`."""
+    """The most-reported city- and province-precision events, and whether more matched.
+
+    When a view holds more events than `limit`, the ones kept are those covered by the most
+    articles (GDELT's NumArticles), newest first among equals.
+    """
     where, filter_params = _filter_condition(filters)
     # Asking for one row more than the limit tells us whether anything was cut off,
     # without a separate count(*) over every matching event.
@@ -174,7 +178,7 @@ def event_points(
             date_added
         FROM events
         WHERE geo_type IN {POINT_GEO_TYPES} AND {_bbox_condition(bbox)} AND {where}
-        ORDER BY date_added DESC, global_event_id DESC
+        ORDER BY num_articles DESC NULLS LAST, date_added DESC, global_event_id DESC
         LIMIT :limit_plus_one
     """
     params = {"limit_plus_one": limit + 1, **(bbox.__dict__ if bbox else {}), **filter_params}

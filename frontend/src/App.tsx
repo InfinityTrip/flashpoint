@@ -109,8 +109,8 @@ export default function App() {
           )}
           {showPoints && points.data?.truncated && (
             <div className="rounded-full bg-black/70 px-3 py-1 text-center text-amber-200">
-              Showing the newest {points.data.features.length.toLocaleString()} events here. Zoom in
-              or narrow the filters to see the rest.
+              Showing the {points.data.features.length.toLocaleString()} most-reported events here.
+              Zoom in or narrow the filters to see the rest.
             </div>
           )}
         </div>

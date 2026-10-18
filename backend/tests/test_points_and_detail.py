@@ -30,28 +30,32 @@ def test_points_leave_out_country_precision_events(
     assert client.get("/v1/events/grid", params={"zoom": 1}).json()["total"] == 5
 
 
-def test_points_are_newest_first(engine: Engine, gdelt: FakeGdelt, client: TestClient) -> None:
+def test_points_are_most_reported_first_then_newest(
+    engine: Engine, gdelt: FakeGdelt, client: TestClient
+) -> None:
     gdelt.publish(
         T0,
         [
-            gdelt_row(event_id=1, added=T0 - timedelta(hours=2)),
-            gdelt_row(event_id=3, added=T0),
-            gdelt_row(event_id=2, added=T0 - timedelta(hours=1)),
+            gdelt_row(event_id=1, articles=2, added=T0 - timedelta(hours=2)),
+            gdelt_row(event_id=2, articles=2, added=T0),
+            gdelt_row(event_id=3, articles=40, added=T0 - timedelta(hours=3)),
+            gdelt_row(event_id=4, articles=9, added=T0 - timedelta(hours=1)),
         ],
     )
     run_ingest(engine, gdelt.source())
 
-    assert point_ids(client) == [3, 2, 1]
+    assert point_ids(client) == [3, 4, 2, 1]
 
 
 def test_points_are_truncated_at_the_limit(
     engine: Engine, gdelt: FakeGdelt, client: TestClient
 ) -> None:
-    gdelt.publish(T0, [gdelt_row() for _ in range(5)])
+    gdelt.publish(T0, [gdelt_row(event_id=i, articles=10 - i) for i in range(1, 6)])
     run_ingest(engine, gdelt.source())
 
     cut = points(client, limit=3)
     assert (len(cut["features"]), cut["truncated"]) == (3, True)
+    assert [f["properties"]["id"] for f in cut["features"]] == [1, 2, 3]
     whole = points(client, limit=5)
     assert (len(whole["features"]), whole["truncated"]) == (5, False)
 

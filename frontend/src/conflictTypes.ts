@@ -17,3 +17,29 @@ export function colourByType(property: string): ExpressionSpecification {
   // MapLibre's tuple type can't describe a computed list of match pairs, hence the cast.
   return ['match', ['get', property], ...pairs, '#f97316'] as unknown as ExpressionSpecification
 }
+
+/** Cluster properties counting each conflict type among a cluster's events: t14 … t20. */
+export function typeCountProperties(): Record<string, ExpressionSpecification> {
+  return Object.fromEntries(
+    Object.keys(CONFLICT_TYPE_COLOURS).map((code) => [
+      `t${code}`,
+      ['+', ['case', ['==', ['get', 'root_code'], Number(code)], 1, 0]],
+    ]),
+  ) as Record<string, ExpressionSpecification>
+}
+
+/** Colours a cluster by its most common conflict type, using the counts above. */
+export function colourByMostCommonType(): ExpressionSpecification {
+  const codes = Object.keys(CONFLICT_TYPE_COLOURS)
+  // For each type: "this type's count is at least every other type's count".
+  const branches = codes.flatMap((code) => [
+    [
+      'all',
+      ...codes
+        .filter((other) => other !== code)
+        .map((other) => ['>=', ['get', `t${code}`], ['get', `t${other}`]]),
+    ],
+    CONFLICT_TYPE_COLOURS[Number(code)],
+  ])
+  return ['case', ...branches, '#f97316'] as unknown as ExpressionSpecification
+}

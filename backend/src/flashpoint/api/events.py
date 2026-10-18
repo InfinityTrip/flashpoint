@@ -101,14 +101,14 @@ class PointFeature(BaseModel):
 
 class PointsResponse(BaseModel):
     type: str = "FeatureCollection"
-    truncated: bool  # true when more events matched than `limit`; only the newest are returned
+    truncated: bool  # more events matched than `limit`; only the most-reported are returned
     features: list[PointFeature]
 
 
 @router.get(
     "/events",
     response_model=PointsResponse,
-    summary="Individual events at city or province precision, newest first",
+    summary="Individual events at city or province precision, most-reported first",
 )
 def events_points(
     request: Request,

@@ -19,7 +19,7 @@ export function Legend({ types, showingPoints }: Props) {
       </ul>
       <p className="mt-1.5 max-w-44 text-gray-500">
         {showingPoints
-          ? 'Points: events located to a city or province. Bigger points stack several events.'
+          ? 'Points: events located to a city or province. Numbered circles group nearby events.'
           : 'Circles: event counts, coloured by the most common type.'}
       </p>
     </div>
