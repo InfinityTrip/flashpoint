@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://flashpoint:flashpoint@localhost:5432/flashpoint"
     # Browser origins allowed to call the API (CORS), comma-separated.
     cors_origins: str = "http://localhost:5173"
+    # Optional regex for extra origins, e.g. Cloudflare Pages preview subdomains.
+    cors_origin_regex: str | None = None
 
     @field_validator("database_url")
     @classmethod

@@ -75,3 +75,24 @@ def test_settings_accept_plain_postgres_urls() -> None:
     settings = Settings(database_url="postgresql://user:pw@host/db?sslmode=require")
 
     assert settings.database_url == "postgresql+psycopg://user:pw@host/db?sslmode=require"
+
+
+def test_cors_allows_listed_and_pattern_origins_only(database_url: str) -> None:
+    app = create_app(
+        Settings(
+            database_url=database_url,
+            cors_origins="https://flashpoint.pages.dev",
+            cors_origin_regex=r"https://[a-z0-9-]+\.flashpoint\.pages\.dev",
+        )
+    )
+    with TestClient(app) as client:
+
+        def allowed(origin: str) -> str | None:
+            response = client.get("/v1/health", headers={"Origin": origin})
+            return response.headers.get("access-control-allow-origin")
+
+        assert allowed("https://flashpoint.pages.dev") == "https://flashpoint.pages.dev"
+        assert (
+            allowed("https://abc123.flashpoint.pages.dev") == "https://abc123.flashpoint.pages.dev"
+        )
+        assert allowed("https://evil.example.com") is None
