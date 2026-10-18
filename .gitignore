@@ -5,3 +5,6 @@ skills-lock.json
 
 # Private planning notes: decision log, ADRs, research (kept local only)
 docs/
+
+# Local ticket tracker (to-spec / to-tickets)
+.scratch/
