@@ -1,0 +1,253 @@
+fips_code,iso2,iso3,name,region_id
+AA,AW,ABW,Aruba,LCN
+AC,AG,ATG,Antigua and Barbuda,LCN
+AE,AE,ARE,United Arab Emirates,MEA
+AF,AF,AFG,Afghanistan,MEA
+AG,DZ,DZA,Algeria,MEA
+AJ,AZ,AZE,Azerbaijan,ECS
+AL,AL,ALB,Albania,ECS
+AM,AM,ARM,Armenia,ECS
+AN,AD,AND,Andorra,ECS
+AO,AO,AGO,Angola,SSF
+AQ,AS,ASM,American Samoa,EAS
+AR,AR,ARG,Argentina,LCN
+AS,AU,AUS,Australia,EAS
+AU,AT,AUT,Austria,ECS
+AV,AI,AIA,Anguilla,LCN
+AY,AQ,ATA,Antarctica,
+BA,BH,BHR,Bahrain,MEA
+BB,BB,BRB,Barbados,LCN
+BC,BW,BWA,Botswana,SSF
+BD,BM,BMU,Bermuda,NAC
+BE,BE,BEL,Belgium,ECS
+BF,BS,BHS,Bahamas,LCN
+BG,BD,BGD,Bangladesh,SAS
+BH,BZ,BLZ,Belize,LCN
+BK,BA,BIH,Bosnia and Herzegovina,ECS
+BL,BO,BOL,Bolivia,LCN
+BM,MM,MMR,Myanmar,EAS
+BN,BJ,BEN,Benin,SSF
+BO,BY,BLR,Belarus,ECS
+BP,SB,SLB,Solomon Islands,EAS
+BR,BR,BRA,Brazil,LCN
+BT,BT,BTN,Bhutan,SAS
+BU,BG,BGR,Bulgaria,ECS
+BV,BV,BVT,Bouvet Island,
+BX,BN,BRN,Brunei,EAS
+BY,BI,BDI,Burundi,SSF
+CA,CA,CAN,Canada,NAC
+CB,KH,KHM,Cambodia,EAS
+CD,TD,TCD,Chad,SSF
+CE,LK,LKA,Sri Lanka,SAS
+CF,CG,COG,Republic of the Congo,SSF
+CG,CD,COD,Democratic Republic of the Congo,SSF
+CH,CN,CHN,China,EAS
+CI,CL,CHL,Chile,LCN
+CJ,KY,CYM,Cayman Islands,LCN
+CK,CC,CCK,Cocos Islands,EAS
+CM,CM,CMR,Cameroon,SSF
+CN,KM,COM,Comoros,SSF
+CO,CO,COL,Colombia,LCN
+CQ,MP,MNP,Northern Mariana Islands,EAS
+CS,CR,CRI,Costa Rica,LCN
+CT,CF,CAF,Central African Republic,SSF
+CU,CU,CUB,Cuba,LCN
+CV,CV,CPV,Cabo Verde,SSF
+CW,CK,COK,Cook Islands,EAS
+CY,CY,CYP,Cyprus,ECS
+DA,DK,DNK,Denmark,ECS
+DJ,DJ,DJI,Djibouti,MEA
+DO,DM,DMA,Dominica,LCN
+DR,DO,DOM,Dominican Republic,LCN
+EC,EC,ECU,Ecuador,LCN
+EG,EG,EGY,Egypt,MEA
+EI,IE,IRL,Ireland,ECS
+EK,GQ,GNQ,Equatorial Guinea,SSF
+EN,EE,EST,Estonia,ECS
+ER,ER,ERI,Eritrea,SSF
+ES,SV,SLV,El Salvador,LCN
+ET,ET,ETH,Ethiopia,SSF
+EZ,CZ,CZE,Czechia,ECS
+FG,GF,GUF,French Guiana,LCN
+FI,FI,FIN,Finland,ECS
+FJ,FJ,FJI,Fiji,EAS
+FK,FK,FLK,Falkland Islands,LCN
+FM,FM,FSM,Micronesia,EAS
+FO,FO,FRO,Faroe Islands,ECS
+FP,PF,PYF,French Polynesia,EAS
+FR,FR,FRA,France,ECS
+FS,TF,ATF,French Southern Territories,
+GA,GM,GMB,Gambia,SSF
+GB,GA,GAB,Gabon,SSF
+GG,GE,GEO,Georgia,ECS
+GH,GH,GHA,Ghana,SSF
+GI,GI,GIB,Gibraltar,ECS
+GJ,GD,GRD,Grenada,LCN
+GK,GG,GGY,Guernsey,ECS
+GL,GL,GRL,Greenland,ECS
+GM,DE,DEU,Germany,ECS
+GP,GP,GLP,Guadeloupe,LCN
+GQ,GU,GUM,Guam,EAS
+GR,GR,GRC,Greece,ECS
+GT,GT,GTM,Guatemala,LCN
+GV,GN,GIN,Guinea,SSF
+GY,GY,GUY,Guyana,LCN
+GZ,PS,PSE,Gaza Strip,MEA
+HA,HT,HTI,Haiti,LCN
+HK,HK,HKG,Hong Kong,EAS
+HM,HM,HMD,Heard Island and McDonald Islands,
+HO,HN,HND,Honduras,LCN
+HR,HR,HRV,Croatia,ECS
+HU,HU,HUN,Hungary,ECS
+IC,IS,ISL,Iceland,ECS
+ID,ID,IDN,Indonesia,EAS
+IM,IM,IMN,Isle of Man,ECS
+IN,IN,IND,India,SAS
+IO,IO,IOT,British Indian Ocean Territory,SAS
+IR,IR,IRN,Iran,MEA
+IS,IL,ISR,Israel,MEA
+IT,IT,ITA,Italy,ECS
+IV,CI,CIV,Ivory Coast,SSF
+IZ,IQ,IRQ,Iraq,MEA
+JA,JP,JPN,Japan,EAS
+JE,JE,JEY,Jersey,ECS
+JM,JM,JAM,Jamaica,LCN
+JO,JO,JOR,Jordan,MEA
+KE,KE,KEN,Kenya,SSF
+KG,KG,KGZ,Kyrgyzstan,ECS
+KN,KP,PRK,North Korea,EAS
+KR,KI,KIR,Kiribati,EAS
+KS,KR,KOR,South Korea,EAS
+KT,CX,CXR,Christmas Island,EAS
+KU,KW,KWT,Kuwait,MEA
+KV,XK,XKX,Kosovo,ECS
+KZ,KZ,KAZ,Kazakhstan,ECS
+LA,LA,LAO,Laos,EAS
+LE,LB,LBN,Lebanon,MEA
+LG,LV,LVA,Latvia,ECS
+LH,LT,LTU,Lithuania,ECS
+LI,LR,LBR,Liberia,SSF
+LO,SK,SVK,Slovakia,ECS
+LS,LI,LIE,Liechtenstein,ECS
+LT,LS,LSO,Lesotho,SSF
+LU,LU,LUX,Luxembourg,ECS
+LY,LY,LBY,Libya,MEA
+MA,MG,MDG,Madagascar,SSF
+MB,MQ,MTQ,Martinique,LCN
+MC,MO,MAC,Macao,EAS
+MD,MD,MDA,Moldova,ECS
+MF,YT,MYT,Mayotte,SSF
+MG,MN,MNG,Mongolia,EAS
+MH,MS,MSR,Montserrat,LCN
+MI,MW,MWI,Malawi,SSF
+MJ,ME,MNE,Montenegro,ECS
+MK,MK,MKD,North Macedonia,ECS
+ML,ML,MLI,Mali,SSF
+MN,MC,MCO,Monaco,ECS
+MO,MA,MAR,Morocco,MEA
+MP,MU,MUS,Mauritius,SSF
+MR,MR,MRT,Mauritania,SSF
+MT,MT,MLT,Malta,MEA
+MU,OM,OMN,Oman,MEA
+MV,MV,MDV,Maldives,SAS
+MX,MX,MEX,Mexico,LCN
+MY,MY,MYS,Malaysia,EAS
+MZ,MZ,MOZ,Mozambique,SSF
+NC,NC,NCL,New Caledonia,EAS
+NE,NU,NIU,Niue,EAS
+NF,NF,NFK,Norfolk Island,EAS
+NG,NE,NER,Niger,SSF
+NH,VU,VUT,Vanuatu,EAS
+NI,NG,NGA,Nigeria,SSF
+NL,NL,NLD,The Netherlands,ECS
+NN,SX,SXM,Sint Maarten,LCN
+NO,NO,NOR,Norway,ECS
+NP,NP,NPL,Nepal,SAS
+NR,NR,NRU,Nauru,EAS
+NS,SR,SUR,Suriname,LCN
+NT,AN,ANT,Netherlands Antilles,LCN
+NU,NI,NIC,Nicaragua,LCN
+NZ,NZ,NZL,New Zealand,EAS
+OD,SS,SSD,South Sudan,SSF
+PA,PY,PRY,Paraguay,LCN
+PC,PN,PCN,Pitcairn,EAS
+PE,PE,PER,Peru,LCN
+PF,,,Paracel Islands,EAS
+PG,,,Spratly Islands,EAS
+PK,PK,PAK,Pakistan,MEA
+PL,PL,POL,Poland,ECS
+PM,PA,PAN,Panama,LCN
+PO,PT,PRT,Portugal,ECS
+PP,PG,PNG,Papua New Guinea,EAS
+PS,PW,PLW,Palau,EAS
+PU,GW,GNB,Guinea-Bissau,SSF
+QA,QA,QAT,Qatar,MEA
+RE,RE,REU,Reunion,SSF
+RI,RS,SRB,Serbia,ECS
+RM,MH,MHL,Marshall Islands,EAS
+RN,MF,MAF,Saint Martin,LCN
+RO,RO,ROU,Romania,ECS
+RP,PH,PHL,Philippines,EAS
+RQ,PR,PRI,Puerto Rico,LCN
+RS,RU,RUS,Russia,ECS
+RW,RW,RWA,Rwanda,SSF
+SA,SA,SAU,Saudi Arabia,MEA
+SB,PM,SPM,Saint Pierre and Miquelon,NAC
+SC,KN,KNA,Saint Kitts and Nevis,LCN
+SE,SC,SYC,Seychelles,SSF
+SF,ZA,ZAF,South Africa,SSF
+SG,SN,SEN,Senegal,SSF
+SH,SH,SHN,Saint Helena,SSF
+SI,SI,SVN,Slovenia,ECS
+SL,SL,SLE,Sierra Leone,SSF
+SM,SM,SMR,San Marino,ECS
+SN,SG,SGP,Singapore,EAS
+SO,SO,SOM,Somalia,SSF
+SP,ES,ESP,Spain,ECS
+ST,LC,LCA,Saint Lucia,LCN
+SU,SD,SDN,Sudan,SSF
+SV,SJ,SJM,Svalbard and Jan Mayen,ECS
+SW,SE,SWE,Sweden,ECS
+SX,GS,SGS,South Georgia and the South Sandwich Islands,
+SY,SY,SYR,Syria,MEA
+SZ,CH,CHE,Switzerland,ECS
+TB,BL,BLM,Saint Barthelemy,LCN
+TD,TT,TTO,Trinidad and Tobago,LCN
+TH,TH,THA,Thailand,EAS
+TI,TJ,TJK,Tajikistan,ECS
+TK,TC,TCA,Turks and Caicos Islands,LCN
+TL,TK,TKL,Tokelau,EAS
+TN,TO,TON,Tonga,EAS
+TO,TG,TGO,Togo,SSF
+TP,ST,STP,Sao Tome and Principe,SSF
+TS,TN,TUN,Tunisia,MEA
+TT,TL,TLS,Timor Leste,EAS
+TU,TR,TUR,Turkey,ECS
+TV,TV,TUV,Tuvalu,EAS
+TW,TW,TWN,Taiwan,EAS
+TX,TM,TKM,Turkmenistan,ECS
+TZ,TZ,TZA,Tanzania,SSF
+UC,CW,CUW,Curacao,LCN
+UG,UG,UGA,Uganda,SSF
+UK,GB,GBR,United Kingdom,ECS
+UP,UA,UKR,Ukraine,ECS
+US,US,USA,United States,NAC
+UV,BF,BFA,Burkina Faso,SSF
+UY,UY,URY,Uruguay,LCN
+UZ,UZ,UZB,Uzbekistan,ECS
+VC,VC,VCT,Saint Vincent and the Grenadines,LCN
+VE,VE,VEN,Venezuela,LCN
+VI,VG,VGB,British Virgin Islands,LCN
+VM,VN,VNM,Vietnam,EAS
+VQ,VI,VIR,U.S. Virgin Islands,LCN
+VT,VA,VAT,Vatican,ECS
+WA,NA,NAM,Namibia,SSF
+WE,PS,PSE,West Bank,MEA
+WF,WF,WLF,Wallis and Futuna,EAS
+WI,EH,ESH,Western Sahara,MEA
+WS,WS,WSM,Samoa,EAS
+WZ,SZ,SWZ,Eswatini,SSF
+YI,CS,SCG,Serbia and Montenegro,ECS
+YM,YE,YEM,Yemen,MEA
+ZA,ZM,ZMB,Zambia,SSF
+ZI,ZW,ZWE,Zimbabwe,SSF

@@ -11,9 +11,12 @@ import pytest
 from alembic import command
 from alembic.config import Config
 from fastapi.testclient import TestClient
+from sqlalchemy import Engine, text
 
 from flashpoint.api.app import create_app
+from flashpoint.db import make_engine
 from flashpoint.settings import Settings
+from tests.gdelt_fixtures import FakeGdelt
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 TEST_DATABASE_URL = os.environ.get(
@@ -32,7 +35,22 @@ def database_url() -> str:
 
 
 @pytest.fixture
-def client(database_url: str) -> TestClient:
+def engine(database_url: str) -> Engine:
+    """The test database, emptied of events and ingest runs (lookup tables stay seeded)."""
+    engine = make_engine(database_url)
+    with engine.begin() as conn:
+        conn.execute(text("TRUNCATE events, ingest_runs"))
+    yield engine
+    engine.dispose()
+
+
+@pytest.fixture
+def gdelt() -> FakeGdelt:
+    return FakeGdelt()
+
+
+@pytest.fixture
+def client(engine: Engine, database_url: str) -> TestClient:
     app = create_app(Settings(database_url=database_url))
     with TestClient(app) as test_client:
         yield test_client

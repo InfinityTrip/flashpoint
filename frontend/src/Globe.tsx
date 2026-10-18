@@ -4,25 +4,62 @@ import * as maplibregl from 'maplibre-gl'
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import { useEffect, useRef } from 'react'
 
+import type { FeatureCollection } from 'geojson'
+
+import type { GridResponse, MapView } from './api'
 import { BASEMAP_STYLE_URL } from './config'
+import { colourByType } from './conflictTypes'
 
 // MapLibre v6 finds its web worker relative to its own file, which bundling breaks.
 // Importing the worker with ?url makes Vite ship it and hands MapLibre the real address.
 maplibregl.setWorkerUrl(maplibreWorkerUrl)
 
-export function Globe() {
+const EMPTY: FeatureCollection = { type: 'FeatureCollection', features: [] }
+// Below this zoom most of the globe is visible, so the API is asked for the whole world.
+const WHOLE_WORLD_BELOW_ZOOM = 3
+
+/** The visible area as the API's bbox parameter, rounded so nearby views share a cache entry. */
+function viewOf(map: maplibregl.Map): MapView {
+  const zoom = map.getZoom()
+  if (zoom < WHOLE_WORLD_BELOW_ZOOM) return { zoom, bbox: null }
+  const bounds = map.getBounds()
+  const span = bounds.getEast() - bounds.getWest()
+  if (span >= 360) return { zoom, bbox: null }
+  const wrap = (lng: number) => ((((lng + 180) % 360) + 360) % 360) - 180
+  const parts = [
+    wrap(bounds.getWest()),
+    Math.max(bounds.getSouth(), -90),
+    wrap(bounds.getEast()),
+    Math.min(bounds.getNorth(), 90),
+  ]
+  return { zoom, bbox: parts.map((n) => n.toFixed(1)).join(',') }
+}
+
+type Props = {
+  grid: GridResponse | undefined
+  onViewChange: (view: MapView) => void
+}
+
+export function Globe({ grid, onViewChange }: Props) {
   const container = useRef<HTMLDivElement>(null)
+  const mapRef = useRef<maplibregl.Map | null>(null)
+  const onViewChangeRef = useRef(onViewChange)
+  useEffect(() => {
+    onViewChangeRef.current = onViewChange
+  }, [onViewChange])
 
   useEffect(() => {
     if (!container.current) return
     const map = new maplibregl.Map({
       container: container.current,
       style: BASEMAP_STYLE_URL,
-      center: [20, 20],
+      center: [30, 20],
       zoom: 1.6,
       attributionControl: { compact: true },
     })
-    // The style resets the projection, so switch to the 3D globe once it has loaded.
+    mapRef.current = map
+    map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'bottom-right')
+
     map.on('style.load', () => {
       map.setProjection({ type: 'globe' })
       // A faint blue atmosphere separates the dark globe from the dark page when zoomed out.
@@ -31,10 +68,52 @@ export function Globe() {
         'horizon-color': '#1e3a5f',
         'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 1, 5, 1, 7, 0],
       })
+
+      map.addSource('grid', { type: 'geojson', data: EMPTY })
+      map.addLayer({
+        id: 'grid-cells',
+        type: 'circle',
+        source: 'grid',
+        paint: {
+          // Area, not radius, grows with the count, so big cells don't look exaggerated.
+          'circle-radius': ['interpolate', ['linear'], ['sqrt', ['get', 'count']], 1, 3, 10, 11, 40, 28],
+          'circle-color': colourByType('top_type'),
+          'circle-opacity': 0.55,
+          'circle-stroke-color': '#ffffff',
+          'circle-stroke-opacity': 0.35,
+          'circle-stroke-width': 0.75,
+        },
+      })
+      onViewChangeRef.current(viewOf(map))
     })
-    map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'bottom-right')
-    return () => map.remove()
+
+    // Report the view after the camera settles; the parent fetches data for it.
+    let timer: number | undefined
+    map.on('moveend', () => {
+      window.clearTimeout(timer)
+      timer = window.setTimeout(() => onViewChangeRef.current(viewOf(map)), 250)
+    })
+
+    map.on('click', 'grid-cells', (event) => {
+      const cell = event.features?.[0]
+      if (cell?.geometry.type !== 'Point') return
+      const [lng, lat] = cell.geometry.coordinates
+      map.flyTo({ center: [lng, lat], zoom: Math.min(map.getZoom() + 2, 8) })
+    })
+    map.on('mouseenter', 'grid-cells', () => (map.getCanvas().style.cursor = 'pointer'))
+    map.on('mouseleave', 'grid-cells', () => (map.getCanvas().style.cursor = ''))
+
+    return () => {
+      window.clearTimeout(timer)
+      map.remove()
+      mapRef.current = null
+    }
   }, [])
+
+  useEffect(() => {
+    const source = mapRef.current?.getSource<maplibregl.GeoJSONSource>('grid')
+    source?.setData(grid ?? EMPTY)
+  }, [grid])
 
   return <div ref={container} className="h-full w-full" data-testid="globe" />
 }

@@ -1,3 +1,5 @@
+import type { Feature, FeatureCollection, Point } from 'geojson'
+
 import { API_URL } from './config'
 
 export type Health = {
@@ -15,3 +17,22 @@ async function getJson<T>(path: string): Promise<T> {
 }
 
 export const fetchHealth = () => getJson<Health>('/health')
+
+export type GridCell = Feature<Point, { count: number; top_type: number }>
+
+export type GridResponse = FeatureCollection<Point, GridCell['properties']> & {
+  cell_size: number
+  total: number
+}
+
+export type MapView = {
+  zoom: number
+  /** west,south,east,north, or null when the whole globe is in view. */
+  bbox: string | null
+}
+
+export const fetchGrid = (view: MapView) => {
+  const params = new URLSearchParams({ zoom: view.zoom.toFixed(1) })
+  if (view.bbox) params.set('bbox', view.bbox)
+  return getJson<GridResponse>(`/events/grid?${params}`)
+}

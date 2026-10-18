@@ -1,6 +1,7 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 
-import { fetchHealth } from './api'
+import { fetchGrid, fetchHealth, type MapView } from './api'
 import { Globe } from './Globe'
 
 function ApiStatus() {
@@ -14,6 +15,15 @@ function ApiStatus() {
 }
 
 export default function App() {
+  const [view, setView] = useState<MapView | null>(null)
+  const grid = useQuery({
+    queryKey: ['grid', view],
+    queryFn: () => fetchGrid(view!),
+    enabled: view !== null,
+    // Keep the old cells on screen while the next view loads, instead of flashing empty.
+    placeholderData: keepPreviousData,
+  })
+
   return (
     <div className="flex h-full flex-col">
       <header className="flex items-center justify-between border-b border-white/10 px-4 py-2">
@@ -25,10 +35,15 @@ export default function App() {
         </p>
       </header>
       <main className="relative min-h-0 flex-1">
-        <Globe />
+        <Globe grid={grid.data} onViewChange={setView} />
       </main>
-      <footer className="border-t border-white/10 px-4 py-1.5 text-xs">
+      <footer className="flex gap-4 border-t border-white/10 px-4 py-1.5 text-xs">
         <ApiStatus />
+        {grid.data && (
+          <span className="text-gray-400">
+            {grid.data.total.toLocaleString()} news-reported events in view
+          </span>
+        )}
       </footer>
     </div>
   )
