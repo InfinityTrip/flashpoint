@@ -69,6 +69,8 @@ function withStackSize(points: PointsResponse): FeatureCollection {
 
 // Nearby points merge into numbered clusters up to this zoom; beyond it every event is drawn.
 const CLUSTER_MAX_ZOOM = 14
+// Clicking an event flies to it at no less than this zoom (about a city and its surroundings).
+const POINT_FOCUS_ZOOM = 7
 
 /** Event ids from point features, newest first. */
 function newestFirst(features: { properties: Record<string, unknown> | null }[]): number[] {
@@ -266,6 +268,12 @@ export function Globe({
         ? map.queryRenderedFeatures(event.point, { layers: ['event-points'] })
         : []
       onSelectEventsRef.current(newestFirst(hits))
+      const hit = hits[0]
+      if (hit?.geometry.type === 'Point') {
+        // Bring the clicked event to the centre, zooming in to at least city-region scale.
+        const center = hit.geometry.coordinates as [number, number]
+        map.flyTo({ center, zoom: Math.max(map.getZoom(), POINT_FOCUS_ZOOM) })
+      }
     })
     map.on('click', 'event-clusters', async (event) => {
       const cluster = event.features?.[0]
@@ -279,6 +287,7 @@ export function Globe({
       }
       // Events at one spot never separate by zooming, so open them all in the detail card.
       onSelectEventsRef.current(newestFirst(await source.getClusterLeaves(clusterId, 1000, 0)))
+      map.flyTo({ center: cluster.geometry.coordinates as [number, number] })
     })
     for (const layer of ['grid-cells', 'event-clusters', 'event-points']) {
       map.on('mouseenter', layer, () => (map.getCanvas().style.cursor = 'pointer'))

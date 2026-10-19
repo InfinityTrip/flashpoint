@@ -41,6 +41,14 @@ def event_filters(
     ] = "7d",
     start: Annotated[date | None, Query(description="First day reported (UTC), inclusive")] = None,
     end: Annotated[date | None, Query(description="Last day reported (UTC), inclusive")] = None,
+    scope: Annotated[
+        Literal["all", "major"],
+        Query(
+            description="major: only violent events (assault, fighting, mass violence, violent "
+            "protest or repression) reported by at least 2 sources; points then show one event "
+            "per source article"
+        ),
+    ] = "all",
 ) -> queries.EventFilters:
     """Validate the shared filters and resolve the time window to exact timestamps."""
     lookups = _lookups(request)
@@ -63,7 +71,7 @@ def event_filters(
         time_from = newest - WINDOWS[window] if newest else None
         time_to = newest
 
-    return queries.EventFilters(region, country, types, time_from, time_to)
+    return queries.EventFilters(region, country, types, time_from, time_to, scope == "major")
 
 
 # Endpoints declare `filters: Filters` to accept and validate the shared filter parameters.

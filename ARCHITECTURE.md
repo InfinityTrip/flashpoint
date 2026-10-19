@@ -109,6 +109,10 @@ Every map endpoint shares one filter vocabulary:
 | `country` | FIPS country code |
 | `type` | one or more CAMEO root codes, 14–20 |
 | `start`, `end` | ISO dates, applied to the date reported |
+| `window` | `24h`, `7d` (default) or `30d` before the newest stored event; ignored when `start` or `end` is given |
+| `scope` | `all` (default) or `major`: only violent root codes (18–20, plus violent protest 145 and violent repression 175) reported by at least 2 sources. Points then show one event per source article |
+
+The site always sends `scope` and `window`, defaulting to major events over 24 hours; the API's defaults suit raw-data users.
 
 Relative windows count back from the newest stored data, so a stalled ingest never fakes a collapse.
 

@@ -11,6 +11,7 @@ import {
   POINTS_FROM_ZOOM,
   pointsPath,
 } from './api'
+import { MAJOR_EVENT_TYPES } from './conflictTypes'
 import { EventCard } from './EventCard'
 import { FilterBar } from './FilterBar'
 import { Globe } from './Globe'
@@ -63,7 +64,8 @@ export default function App() {
     staleTime: 5 * 60_000,
   })
   // Zoomed out the globe shows grid cells; zoomed in, individual events. Only one is fetched.
-  const wantPoints = map !== null && map.zoom >= POINTS_FROM_ZOOM
+  // Major events are few enough to draw as (clustered) points at every zoom.
+  const wantPoints = map !== null && (view.scope === 'major' || map.zoom >= POINTS_FROM_ZOOM)
   const gridKey = map && !wantPoints ? gridPath(map, view) : null
   const pointsKey = map && wantPoints ? pointsPath(map, view) : null
   const grid = useQuery({
@@ -114,7 +116,13 @@ export default function App() {
             </div>
           )}
         </div>
-        <Legend types={filters.data?.conflict_types} showingPoints={showPoints} />
+        <Legend
+          types={filters.data?.conflict_types.filter(
+            (t) => view.scope === 'all' || MAJOR_EVENT_TYPES.includes(t.root_code),
+          )}
+          showingPoints={showPoints}
+          majorOnly={view.scope === 'major'}
+        />
         {selected.length > 0 && (
           <EventCard key={selected.join(',')} ids={selected} onClose={closeCard} />
         )}

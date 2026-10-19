@@ -12,6 +12,10 @@ _Avoid_: incident, attack, report
 One of the 7 top-level CAMEO categories from 14 (Protest) to 20 (Mass violence) that Flashpoint keeps.
 _Avoid_: category, event class
 
+**Major event**:
+An event in a violent category (assault, fight, mass violence, violent protest or violent repression) that at least 2 news sources reported. The site's default view; on the map, each source article appears once, as its most-reported event.
+_Avoid_: important event, significant event, verified event
+
 **Location precision**:
 How exactly GDELT placed an event: city, province, or only the country's centre point.
 _Avoid_: accuracy, geo type

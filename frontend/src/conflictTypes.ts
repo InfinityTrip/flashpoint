@@ -11,6 +11,12 @@ export const CONFLICT_TYPE_COLOURS: Record<number, string> = {
   20: '#c026d3',
 }
 
+/**
+ * The root codes that can hold major events: violent protest (14), violent repression (17),
+ * assault (18), fight (19) and mass violence (20). Military posture and reduced relations can't.
+ */
+export const MAJOR_EVENT_TYPES = [14, 17, 18, 19, 20]
+
 /** A MapLibre expression colouring each feature by the conflict type in `property`. */
 export function colourByType(property: string): ExpressionSpecification {
   const pairs = Object.entries(CONFLICT_TYPE_COLOURS).flatMap(([code, colour]) => [Number(code), colour])

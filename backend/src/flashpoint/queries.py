@@ -62,6 +62,18 @@ class EventFilters:
     # the previous day, so an interval that excludes `from` puts that file on the right day.
     time_from: datetime | None = None
     time_to: datetime | None = None
+    major: bool = False  # only major events (see MAJOR_EVENT_CONDITION)
+
+
+# A major event is a violent one that more than one news outlet reported:
+#   - root codes 18-20 (assault, fight, mass violence), plus violent protest or riot (145x)
+#     and violent repression (175), the two violent codes under the milder roots 14 and 17;
+#   - NumSources >= 2, so a story carried by a single outlet, where most miscoding lives,
+#     is left out.
+MAJOR_EVENT_CONDITION = """(
+    (root_code >= 18 OR left(event_code, 3) IN ('145', '175'))
+    AND num_sources >= 2
+)"""
 
 
 def _filter_condition(filters: EventFilters) -> tuple[str, dict]:
@@ -84,6 +96,8 @@ def _filter_condition(filters: EventFilters) -> tuple[str, dict]:
     if filters.time_to:
         conditions.append("date_added <= :time_to")
         params["time_to"] = filters.time_to
+    if filters.major:
+        conditions.append(MAJOR_EVENT_CONDITION)
     return " AND ".join(conditions) or "TRUE", params
 
 
@@ -164,9 +178,24 @@ def event_points(
     """The most-reported city- and province-precision events, and whether more matched.
 
     When a view holds more events than `limit`, the ones kept are those covered by the most
-    articles (GDELT's NumArticles), newest first among equals.
+    articles (GDELT's NumArticles), newest first among equals. With the major filter, each
+    source article appears once.
     """
     where, filter_params = _filter_condition(filters)
+    matching = f"""
+        SELECT * FROM events
+        WHERE geo_type IN {POINT_GEO_TYPES} AND {_bbox_condition(bbox)} AND {where}
+    """
+    if filters.major:
+        # One article often yields several coded events (one per actor pair or place it
+        # names). DISTINCT ON keeps the first row of each article in the ORDER BY, which is
+        # its most-reported event.
+        matching = f"""
+            SELECT DISTINCT ON (coalesce(source_url, global_event_id::text)) *
+            FROM ({matching}) AS m
+            ORDER BY coalesce(source_url, global_event_id::text),
+                     num_articles DESC NULLS LAST, date_added DESC, global_event_id DESC
+        """
     # Asking for one row more than the limit tells us whether anything was cut off,
     # without a separate count(*) over every matching event.
     sql = f"""
@@ -176,8 +205,7 @@ def event_points(
             ST_Y(location) AS lat,
             root_code,
             date_added
-        FROM events
-        WHERE geo_type IN {POINT_GEO_TYPES} AND {_bbox_condition(bbox)} AND {where}
+        FROM ({matching}) AS candidates
         ORDER BY num_articles DESC NULLS LAST, date_added DESC, global_event_id DESC
         LIMIT :limit_plus_one
     """

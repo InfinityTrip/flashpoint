@@ -28,6 +28,8 @@ def gdelt_row(
     added: datetime = datetime(2026, 10, 18, 9, 15, tzinfo=UTC),
     event_date: str | None = None,
     articles: int = 6,
+    sources: int = 2,
+    url: str = "https://example.com/news/article",
 ) -> list[str]:
     """One 61-column GDELT 2.0 export row."""
     row = [""] * 61
@@ -42,11 +44,11 @@ def gdelt_row(
     row[27] = row[26]
     row[28] = str(root_code)
     row[29] = "4"
-    row[30], row[31], row[32], row[33], row[34] = "-10.0", "6", "2", str(articles), "-8.5"
+    row[30], row[31], row[32], row[33], row[34] = "-10.0", "6", str(sources), str(articles), "-8.5"
     row[51], row[52], row[53] = str(geo_type), place, country
     row[56], row[57] = str(lat), str(lon)
     row[59] = format_timestamp(added)
-    row[60] = "https://example.com/news/article"
+    row[60] = url
     return row
 
 
