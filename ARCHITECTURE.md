@@ -22,7 +22,7 @@ Terms used here (event, conflict type, surge, baseline, replay, ingest run, rete
                                          │ JSON / GeoJSON
                            ┌─────────────┴─────────────┐
                            │ React + MapLibre globe    │
-                           │ Cloudflare Pages          │
+                           │ Cloudflare Workers        │
                            └───────────────────────────┘
 ```
 
@@ -35,10 +35,10 @@ The ingest job and the API share one Python package (`backend/`) and one contain
 | Data access | SQLAlchemy Core + psycopg 3, hand-written SQL, no ORM |
 | API | FastAPI, Pydantic v2, uvicorn |
 | Ingest | Python 3.13, httpx, stdlib `csv` |
-| Frontend | Vite, React, TypeScript, MapLibre GL JS v5 (globe projection), TanStack Query, Tailwind |
+| Frontend | Vite, React, TypeScript, MapLibre GL JS v6 (globe projection), TanStack Query, Tailwind |
 | Basemap | CARTO Dark Matter |
-| Hosting | Railway (API + cron), Cloudflare Pages (frontend), Neon (database) |
-| Tooling | uv, ruff, pytest, ESLint, Vitest, Docker Compose, GitHub Actions |
+| Hosting | Railway (API + cron), Cloudflare Workers static assets (frontend), Neon (database) |
+| Tooling | uv, ruff, pytest, oxlint, Vitest, Docker Compose, GitHub Actions |
 
 ## Ingest pipeline
 
@@ -119,21 +119,20 @@ Relative windows count back from the newest stored data, so a stalled ingest nev
 | Endpoint | Returns |
 |---|---|
 | `GET /v1/events/grid?zoom&bbox` | Counts per grid cell (`ST_SnapToGrid`), with the cell size set by zoom |
-| `GET /v1/events?bbox&limit` | Individual city- and province-precision events as GeoJSON, newest first, with a `truncated` flag |
+| `GET /v1/events?bbox&limit` | Individual city- and province-precision events as GeoJSON, most-reported first, with a `truncated` flag |
 | `GET /v1/events/{id}` | Every stored field for one event, with type, action, place and actor countries resolved |
-| `GET /v1/surges?region&type` | Countries surging now, ranked by σ |
-| `GET /v1/replay` | One coarse grid per day across the retention window |
+| `GET /v1/surges?region&type` | Countries surging now, ranked by σ (planned) |
+| `GET /v1/replay` | One coarse grid per day across the retention window (planned) |
 | `GET /v1/filters` | Regions, countries, conflict types, available date range |
 | `GET /v1/health` | Database status and minutes since the last successful ingest |
 
 The API also has:
 
 - interactive OpenAPI docs at `/docs`
-- per-IP rate limiting (HTTP 429 with `Retry-After`)
-- `Cache-Control: public, max-age=300` on map data
 - CORS limited to the frontend's domain and localhost
+- planned: per-IP rate limiting (HTTP 429 with `Retry-After`) and `Cache-Control: public, max-age=300` on map data
 
-## Surge detection
+## Surge detection (planned)
 
 A surge is a country whose last 7 days are statistically unusual compared with its own baseline. One SQL statement computes it:
 
@@ -146,15 +145,13 @@ Each country is judged against its own normal variation, so a country that is al
 
 ## Frontend
 
-- **Globe:** MapLibre GL JS v5 with the globe projection and the CARTO Dark Matter basemap. When zoomed out it draws grid counts; when zoomed in, points coloured by conflict type.
+- **Globe:** MapLibre GL JS v6 with the globe projection and the CARTO Dark Matter basemap. Major events are drawn as points at every zoom. With all events, it draws grid counts when zoomed out and points when zoomed in. Points merge into numbered clusters coloured by their most common conflict type, and clicking an event flies the globe to it.
 - **View state:** filters and camera position live in the URL through one codec, so every view is a shareable link.
 - **Panels:**
-  - filter bar on top
-  - "Surging now" on the left (a pull-up sheet on phones)
+  - filter bar on top, with a major/all events toggle
   - detail card on click
-  - replay controls
-  - "About this data"
-  - a footer showing data freshness
+  - legend and a footer showing the API status
+  - planned: "Surging now" on the left (a pull-up sheet on phones), replay controls and "About this data"
 - **Data fetching:** TanStack Query caches responses and keeps the previous data on screen while new data loads.
 
 ## Testing
@@ -168,16 +165,16 @@ Docker Compose starts PostGIS, the API and the frontend dev server together. Com
 
 ## Build checklist
 
-- [ ] Skeleton: local stack, globe, `/v1/health`, CI
-- [ ] Ingest the newest GDELT file; grid counts on the globe
-- [ ] Catch-up, 35-day backfill, retention, health freshness
-- [ ] Filters and shareable URLs
-- [ ] Points and event detail card
-- [ ] Live deploy: Neon, Railway API and cron, Cloudflare Pages
+- [x] Skeleton: local stack, globe, `/v1/health`, CI
+- [x] Ingest the newest GDELT file; grid counts on the globe
+- [x] Catch-up, 35-day backfill, retention, health freshness
+- [x] Filters and shareable URLs
+- [x] Points and event detail card
+- [x] Live deploy: Neon, Railway API and cron, Cloudflare Workers
 - [ ] Surging now
 - [ ] Replay
 - [ ] API hardening: rate limits, cache headers, docs
-- [ ] About panel, footer, mobile layout, README
+- [ ] About panel, footer, mobile layout
 
 ## Later
 
